@@ -171,6 +171,8 @@ class StagGUI:
         self.test_checkbox = ttk.Checkbutton(
             self.root,
             text="Simulate tagging only",
+            self.root,
+            text="Simulate tagging only",
             variable=self.var_test
         )
         self.test_checkbox.grid(row=2, column=1, padx=5, pady=5, sticky=tk.W)
