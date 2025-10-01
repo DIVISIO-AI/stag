@@ -137,18 +137,18 @@ class StagGUI:
             row=0, column=0, padx=5, pady=5, sticky=tk.W
         )
         self.entry_imagedir = ttk.Entry(self.root, width=50)
-        self.entry_imagedir.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+        self.entry_imagedir.grid(row=0, column=1, columnspan=2, padx=5, pady=5, sticky="ew")
         self.browse_button = ttk.Button(
             self.root, text="Browse", command=self.browse_directory
         )
-        self.browse_button.grid(row=0, column=2, padx=5, pady=5)
+        self.browse_button.grid(row=0, column=3, padx=5, pady=5)
         
         # Prefix input
         ttk.Label(self.root, text="Prefix:").grid(
             row=1, column=0, padx=5, pady=5, sticky=tk.W
         )
         self.entry_prefix = ttk.Entry(self.root, width=50)
-        self.entry_prefix.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
+        self.entry_prefix.grid(row=1, column=1, columnspan=2, padx=5, pady=5, sticky="ew")
         self.entry_prefix.insert(0, self.DEFAULT_PREFIX)
     
     def create_checkboxes(self):
@@ -165,24 +165,24 @@ class StagGUI:
             "If this box is checked, STAG doesn't tag images which "
             "already have one or more tags with the given prefix."
         ))
-        
+
         # Simulate tagging checkbox
         self.var_test = tk.BooleanVar()
         self.test_checkbox = ttk.Checkbutton(
-            self.root, 
-            text="Simulate tagging only", 
+            self.root,
+            text="Simulate tagging only",
             variable=self.var_test
         )
         self.test_checkbox.grid(row=2, column=1, padx=5, pady=5, sticky=tk.W)
         ToolTip(self.test_checkbox, msg=(
             "Analyze images but don't write changes to the file system."
         ))
-        
+
         # Darktable-compatible filenames checkbox
         self.var_prefer_exact_filenames = tk.BooleanVar()
         self.prefer_exact_filenames_checkbox = ttk.Checkbutton(
-            self.root, 
-            text="Use darktable-compatible filenames", 
+            self.root,
+            text="Use darktable-compatible filenames",
             variable=self.var_prefer_exact_filenames
         )
         self.prefer_exact_filenames_checkbox.grid(
@@ -191,6 +191,18 @@ class StagGUI:
         ToolTip(self.prefer_exact_filenames_checkbox, msg=(
             "When creating new XMP files, create PICT0001.JPG.XMP instead of PICT0001.XMP"
         ))
+
+        # Exclude JPG XMP checkbox
+        self.var_exclude_jpg = tk.BooleanVar()
+        self.exclude_jpg = ttk.Checkbutton(
+            self.root,
+            text="Exclude JPG XMP files",
+            variable=self.var_exclude_jpg
+        )
+        self.exclude_jpg.grid(row=2, column=3, padx=5, pady=5, sticky=tk.W)
+        ToolTip(self.exclude_jpg, msg=(
+            "Don't tag JPG files."
+        ))
     
     def create_buttons(self):
         """Create action buttons."""
@@ -198,24 +210,24 @@ class StagGUI:
         self.run_button = ttk.Button(
             self.root, text="Run STAG", command=self.run_tagger
         )
-        self.run_button.grid(row=3, column=0, pady=10)
+        self.run_button.grid(row=3, column=1, pady=10)
         
         # Cancel button
         self.cancel_button = ttk.Button(
             self.root, text="Cancel", command=self.cancel_tagger
         )
-        self.cancel_button.grid(row=3, column=1, pady=10)
+        self.cancel_button.grid(row=3, column=2, pady=10)
         self.cancel_button.config(state='disabled')
     
     def create_output_area(self):
         """Create the tagger output text area."""
         ttk.Label(self.root, text="Tagger Output:").grid(
-            row=4, column=0, columnspan=3, padx=5, pady=(10, 0), sticky=tk.W
+            row=4, column=0, columnspan=4, padx=5, pady=(10, 0), sticky=tk.W
         )
         
         # Text output with scrollbar
         text_frame = ttk.Frame(self.root)
-        text_frame.grid(row=5, column=0, columnspan=3, padx=5, pady=5, sticky="nsew")
+        text_frame.grid(row=5, column=0, columnspan=4, padx=5, pady=5, sticky="nsew")
         
         self.text_output = tk.Text(text_frame, height=15, wrap="word")
         self.text_output.grid(row=0, column=0, sticky="nsew")
@@ -241,10 +253,10 @@ class StagGUI:
         
         # DIVISIO logo and info
         logo_label = ttk.Label(self.root, image=self.divisio_logo_photo)
-        logo_label.grid(row=7, column=2, padx=5, pady=5, sticky='ne')
+        logo_label.grid(row=7, column=3, padx=5, pady=5, sticky='ne')
         
         creator_label = ttk.Label(self.root, text="Made with love by DIVISIO")
-        creator_label.grid(row=8, column=2, padx=5, pady=5, sticky='ne')
+        creator_label.grid(row=8, column=3, padx=5, pady=5, sticky='ne')
         
         link = ttk.Label(
             self.root, 
@@ -252,7 +264,7 @@ class StagGUI:
             foreground="blue", 
             cursor="hand2"
         )
-        link.grid(row=9, column=2, padx=5, pady=5, sticky='ne')
+        link.grid(row=9, column=3, padx=5, pady=5, sticky='ne')
         link.bind("<Button-1>", lambda e: self.open_webpage("https://divis.io"))
     
     def run_tagger(self):
@@ -265,13 +277,14 @@ class StagGUI:
         force = not self.var_skip.get()
         test = self.var_test.get()
         prefer_exact_filenames = self.var_prefer_exact_filenames.get()
+        exclude_jpg = self.var_exclude_jpg.get()
 
         threading.Thread(
             target=self.run_tagger_thread, 
-            args=(imagedir, prefix, force, test, prefer_exact_filenames)
+            args=(imagedir, prefix, force, test, prefer_exact_filenames, exclude_jpg)
         ).start()
     
-    def run_tagger_thread(self, imagedir, prefix, force, test, prefer_exact_filenames):
+    def run_tagger_thread(self, imagedir, prefix, force, test, prefer_exact_filenames, exclude_jpg):
         """Run the tagger in a separate thread."""
         # Redirect stdout and stderr to the text widget
         sys.stdout = TextRedirector(self.text_output, "stdout")
@@ -300,7 +313,8 @@ class StagGUI:
                 384,  # Image size parameter
                 force, 
                 test, 
-                prefer_exact_filenames, 
+                prefer_exact_filenames,
+                exclude_jpg,
                 prefix
             )
 
@@ -330,13 +344,13 @@ class StagGUI:
         """Update the UI state based on whether the tagger is running or not."""
         if running:
             for widget in (self.entry_imagedir, self.entry_prefix, self.browse_button,
-                          self.run_button, self.force_checkbox, self.test_checkbox,
+                          self.run_button, self.force_checkbox, self.test_checkbox, self.exclude_jpg,
                           self.prefer_exact_filenames_checkbox):
                 widget.config(state='disabled')
             self.cancel_button.config(state='normal')
         else:
             for widget in (self.entry_imagedir, self.entry_prefix, self.browse_button,
-                          self.run_button, self.force_checkbox, self.test_checkbox,
+                          self.run_button, self.force_checkbox, self.test_checkbox, self.exclude_jpg,
                           self.prefer_exact_filenames_checkbox):
                 widget.config(state='normal')
             self.cancel_button.config(state='disabled')

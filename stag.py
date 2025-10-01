@@ -74,6 +74,7 @@ class SKTagger:
                 force_tagging: bool,
                 test_mode: bool,
                 prefer_exact_filenames: bool,
+                exclude_jpg: bool,
                 tag_prefix: str):
         """
         Initialize the tagger with given parameters
@@ -84,6 +85,7 @@ class SKTagger:
             force_tagging: Force tagging even if images are already tagged
             test_mode: Don't actually write or modify XMP files
             prefer_exact_filenames: Use exact filenames for XMP sidecars
+            exclude_jpg: Exclude JPG files
             tag_prefix: Prefix for tags (empty string for no prefix)
         """
         register_heif_opener()
@@ -100,6 +102,7 @@ class SKTagger:
         self.force_tagging = force_tagging
         self.test_mode = test_mode
         self.prefer_exact_filenames = prefer_exact_filenames
+        self.exclude_jpg = exclude_jpg
         self.tag_prefix = tag_prefix
 
 
@@ -249,6 +252,11 @@ class SKTagger:
 
                 # Skip hidden files
                 if fname.startswith("."):
+                    continue
+
+                # Exclude JPG files
+                if self.exclude_jpg and (fname.endswith(".jpg") or fname.endswith(".JPG") or fname.endswith(".jpeg") or fname.endswith(".JPEG")):
+                    print(f"File {fname} excluded.")
                     continue
 
                 # Process the image
