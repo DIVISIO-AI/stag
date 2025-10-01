@@ -196,7 +196,7 @@ class StagGUI:
         self.var_exclude_jpg = tk.BooleanVar()
         self.exclude_jpg = ttk.Checkbutton(
             self.root,
-            text="Exclude JPG XMP files",
+            text="Exclude JPG files",
             variable=self.var_exclude_jpg
         )
         self.exclude_jpg.grid(row=2, column=3, padx=5, pady=5, sticky=tk.W)
