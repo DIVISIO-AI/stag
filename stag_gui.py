@@ -75,27 +75,23 @@ class StagGUI:
         
     def apply_hidpi_scaling(self):
         """Apply HiDPI scaling for better display on high-resolution screens."""
-        # Check if the system is Windows and supports DPI awareness
-        if hasattr(ctypes, 'windll'):
-            ctypes.windll.shcore.SetProcessDpiAwareness(1)
-
-        # Calculate scale based on screen resolution
         try:
-            # Get screen's width in pixels and in mm
-            screen_width_px = self.root.winfo_screenwidth()
-            screen_width_mm = self.root.winfo_screenmmwidth()
-
-            # Calculate DPI (dots per inch)
-            screen_dpi = screen_width_px / (screen_width_mm / 25.4)
-
-            # Determine scaling factor (common HiDPI scaling is 1.5 or 2)
-            scaling_factor = screen_dpi / 96  # 96 DPI is standard
-
-            # Set Tkinter scaling
-            if scaling_factor > 1:
-                self.root.tk.call('tk', 'scaling', scaling_factor)
-        except Exception as e:
-            print(f"Could not determine DPI scaling factor: {e}")
+            # This function and the required win API calls are available on Windows 8.1+
+            ctypes.windll.shcore.SetProcessDpiAwareness(2)
+            # Get the DPI for the current window
+            dpi = ctypes.windll.user32.GetDpiForWindow(self.root.winfo_id())
+            # Calculate the scaling factor
+            scaling_factor = dpi / 96
+            # Set the scaling factor for the entire Tkinter application
+            self.root.tk.call('tk', 'scaling', scaling_factor)
+        except (AttributeError, TypeError):
+            # Fallback for older Windows versions or other OS
+            try:
+                # This function is available on Windows Vista+
+                ctypes.windll.user32.SetProcessDPIAware()
+            except AttributeError:
+                # If not on Windows, do nothing
+                pass
     
     def setup_grid_configuration(self):
         """Configure the grid layout for responsive design."""
